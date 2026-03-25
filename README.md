@@ -39,7 +39,7 @@ Este projeto é uma aplicação mobile de gerenciamento de notas pessoais desenv
 O vídeo demonstrativo com o funcionamento da aplicação e a persistência de dados no console do Firebase Firestore pode ser acessado no link abaixo:
 
 - Link do vídeo: https://youtu.be/TIGdp3INu_4
-
+[![Watch the video](https://i.sstatic.net/Vp2cE.png)](https://youtu.be/TIGdp3INu_4)
 ## Integrantes
 
 - RM: 561061 | Arthur Thomas Mariano de Souza
