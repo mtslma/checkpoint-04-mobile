@@ -5,8 +5,10 @@ import { auth } from "../services/firebaseConfig";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { criarPerfilUsuario } from "../services/userDataService";
+import { useTranslation } from "react-i18next";
 
 export default function CadastroScreen() {
+    const { t } = useTranslation();
     const [nome, setNome] = useState("");
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
@@ -14,102 +16,95 @@ export default function CadastroScreen() {
     const router = useRouter();
 
     const handleCadastro = async () => {
-        // Validação básica pra evitar dados vazios
         if (!nome.trim() || !email.trim() || !senha.trim()) {
-            Alert.alert("Erro", "Preencha todos os campos!");
+            Alert.alert(t("register_error_title"), t("register_error_fields"));
             return;
         }
 
         setLoading(true);
 
         try {
-            console.log("Iniciando criação no Auth...");
-
-            // Cria o usuário no Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), senha);
             const user = userCredential.user;
 
-            console.log("Usuário criado. Salvando no Firestore...");
-
-            // Cria o perfil do usuário no banco (Firestore)
             await criarPerfilUsuario({
                 uid: user.uid,
                 email: user.email,
                 nome: nome.trim(),
             });
 
-            // Salva localmente pra manter login
             await AsyncStorage.setItem("@user", JSON.stringify(user));
-
-            console.log("Sucesso! Redirecionando...");
 
             setLoading(false);
             router.replace("/Home");
         } catch (error: any) {
             setLoading(false);
-
-            console.error("Erro no cadastro:", error.code);
-            Alert.alert("Erro", "Falha ao criar conta: " + error.message);
+            Alert.alert(t("register_error_title"), t("register_error_fail") + error.message);
         }
     };
 
     return (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
             <View style={styles.inner}>
-                <Text style={styles.titulo}>Criar Conta</Text>
+                <Text style={styles.titulo}>{t("register_title")}</Text>
 
-                <TextInput style={styles.input} placeholder="Nome" placeholderTextColor="#999" value={nome} onChangeText={setNome} />
+                <TextInput style={styles.input} placeholder={t("name_placeholder")} placeholderTextColor="#ccc" value={nome} onChangeText={setNome} />
 
-                <TextInput style={styles.input} placeholder="E-mail" placeholderTextColor="#999" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+                <TextInput style={styles.input} placeholder={t("email_placeholder")} placeholderTextColor="#ccc" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
 
-                <TextInput style={styles.input} placeholder="Senha" placeholderTextColor="#999" secureTextEntry value={senha} onChangeText={setSenha} />
+                <TextInput style={styles.input} placeholder={t("password_placeholder")} placeholderTextColor="#ccc" secureTextEntry value={senha} onChangeText={setSenha} />
 
                 <TouchableOpacity style={styles.botao} onPress={handleCadastro} disabled={loading}>
-                    {/* Feedback visual enquanto cria a conta */}
-                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.textoBotao}>Finalizar Cadastro</Text>}
+                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.textoBotao}>{t("register_button")}</Text>}
+                </TouchableOpacity>
+
+                {/* Botão para voltar para a index.tsx */}
+                <TouchableOpacity onPress={() => router.push("/")}>
+                    <Text style={styles.linkText}>{t("btn_back")}</Text>
                 </TouchableOpacity>
             </View>
         </KeyboardAvoidingView>
     );
 }
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F8F7FF",
+        backgroundColor: "#fff", // Fundo branco igual à index
     },
     inner: {
         flex: 1,
         justifyContent: "center",
-        padding: 25,
+        padding: 20,
     },
     titulo: {
-        fontSize: 28,
-        fontWeight: "700",
-        color: "#6A5ACD",
-        marginBottom: 40,
+        fontSize: 24,
+        fontWeight: "bold",
+        marginBottom: 20,
         textAlign: "center",
     },
     input: {
-        backgroundColor: "#FFFFFF",
-        color: "#333",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
         borderWidth: 1,
-        borderColor: "#E0D6FF",
+        borderColor: "#ccc",
+        padding: 10,
+        marginBottom: 15,
+        borderRadius: 5,
+        color: "#333",
     },
     botao: {
-        backgroundColor: "#7B61FF",
-        padding: 16,
-        borderRadius: 12,
+        backgroundColor: "#007AFF", // Azul padrão da index
+        padding: 15,
+        borderRadius: 5,
         alignItems: "center",
-        height: 56,
         justifyContent: "center",
-        marginTop: 10,
     },
     textoBotao: {
-        color: "#FFFFFF",
-        fontSize: 16,
-        fontWeight: "600",
+        color: "#fff",
+        fontWeight: "bold",
+    },
+    linkText: {
+        color: "#007AFF",
+        marginTop: 15,
+        textAlign: "center",
     },
 });

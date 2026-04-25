@@ -1,116 +1,60 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
-import { auth } from "../services/firebaseConfig";
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useRouter, Link } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { registrarUltimoLogin } from "../services/userDataService";
+import { auth } from "../services/firebaseConfig";
+import { useTranslation } from "react-i18next"; // Importe o hook
 
 export default function LoginScreen() {
     const [email, setEmail] = useState("");
-    const [senha, setSenha] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [password, setPassword] = useState("");
     const router = useRouter();
-
-    useEffect(() => {
-        // Se já tiver usuário salvo, nem mostra login — manda direto pra Home
-        const verificarLogin = async () => {
-            const userJSON = await AsyncStorage.getItem("@user");
-            if (userJSON) router.replace("/Home");
-        };
-
-        verificarLogin();
-    }, []);
+    const { t, i18n } = useTranslation(); // Inicialize o hook
 
     const handleLogin = async () => {
-        // Evita tentar login com campos vazios
-        if (!email.trim() || !senha.trim()) {
-            Alert.alert("Atenção", "Informe e-mail e senha.");
-            return;
-        }
-
-        setLoading(true);
-
         try {
-            // Autentica no Firebase
-            const userCredential = await signInWithEmailAndPassword(auth, email.trim(), senha);
-            const user = userCredential.user;
-
-            // Salva info útil (tipo último login)
-            await registrarUltimoLogin(user.uid, user.email);
-
-            // Guarda o usuário localmente pra não precisar logar sempre
-            await AsyncStorage.setItem("@user", JSON.stringify(user));
-
-            setLoading(false);
+            await signInWithEmailAndPassword(auth, email, password);
             router.replace("/Home");
-        } catch (error) {
-            setLoading(false);
-            Alert.alert("Erro", "E-mail ou senha incorretos.");
+        } catch (error: any) {
+            Alert.alert(t("login_error"), error.message);
         }
+    };
+
+    const toggleLanguage = () => {
+        const newLang = i18n.language === "pt" ? "en" : "pt";
+        i18n.changeLanguage(newLang);
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.titulo}>App de Notas</Text>
+            <Text style={styles.title}>{t("welcome")}</Text>
 
-            <TextInput style={styles.input} placeholder="E-mail" placeholderTextColor="#999" value={email} onChangeText={setEmail} autoCapitalize="none" />
+            <TextInput style={styles.input} placeholder={t("email_placeholder")} value={email} onChangeText={setEmail} />
+            <TextInput style={styles.input} placeholder={t("password_placeholder")} secureTextEntry value={password} onChangeText={setPassword} />
 
-            <TextInput style={styles.input} placeholder="Senha" placeholderTextColor="#999" secureTextEntry value={senha} onChangeText={setSenha} />
-
-            <TouchableOpacity style={styles.botao} onPress={handleLogin} disabled={loading}>
-                {/* Mostra loader enquanto faz login (feedback pro usuário) */}
-                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.textoBotao}>Entrar</Text>}
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+                <Text style={styles.buttonText}>{t("login_button")}</Text>
             </TouchableOpacity>
 
-            <Link href="/CadastrarScreen" style={styles.link}>
-                Criar nova conta
-            </Link>
+            <TouchableOpacity onPress={() => router.push("/CadastrarScreen")}>
+                <Text style={styles.linkText}>{t("go_to_register")}</Text>
+            </TouchableOpacity>
+
+            {/* Botão de mudar idioma */}
+            <TouchableOpacity style={styles.langButton} onPress={toggleLanguage}>
+                <Text style={styles.langButtonText}>{i18n.language === "pt" ? "Switch to English 🇺🇸" : "Mudar para Português 🇧🇷"}</Text>
+            </TouchableOpacity>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#F8F7FF",
-        padding: 25,
-    },
-    titulo: {
-        fontSize: 28,
-        fontWeight: "700",
-        color: "#6A5ACD",
-        marginBottom: 40,
-        textAlign: "center",
-    },
-    input: {
-        backgroundColor: "#FFFFFF",
-        color: "#333",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: "#E0D6FF",
-    },
-    botao: {
-        backgroundColor: "#7B61FF",
-        padding: 16,
-        borderRadius: 12,
-        alignItems: "center",
-        height: 56,
-        justifyContent: "center",
-        marginTop: 10,
-    },
-    textoBotao: {
-        color: "#FFFFFF",
-        fontSize: 16,
-        fontWeight: "600",
-    },
-    link: {
-        color: "#7B61FF",
-        textAlign: "center",
-        marginTop: 25,
-        fontSize: 15,
-        fontWeight: "500",
-    },
+    container: { flex: 1, justifyContent: "center", padding: 20, backgroundColor: "#fff" },
+    title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
+    input: { borderWidth: 1, borderColor: "#ccc", padding: 10, marginBottom: 15, borderRadius: 5 },
+    button: { backgroundColor: "#007AFF", padding: 15, borderRadius: 5, alignItems: "center" },
+    buttonText: { color: "#fff", fontWeight: "bold" },
+    linkText: { color: "#007AFF", marginTop: 15, textAlign: "center" },
+    langButton: { marginTop: 30, padding: 10, borderWidth: 1, borderColor: "#007AFF", borderRadius: 5 },
+    langButtonText: { color: "#007AFF", textAlign: "center" },
 });
