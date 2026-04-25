@@ -1,19 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../services/firebaseConfig";
-import { useTranslation } from "react-i18next"; // Importe o hook
+import { useTranslation } from "react-i18next";
+import { dispararNotificacaoLocal, solicitarPermissaoNotificacao } from "../services/notificationService";
 
 export default function LoginScreen() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const router = useRouter();
-    const { t, i18n } = useTranslation(); // Inicialize o hook
+    const { t, i18n } = useTranslation();
+
+    useEffect(() => {
+        // Pede permissão logo no início (Tutorial pág. 11)
+        solicitarPermissaoNotificacao();
+    }, []);
 
     const handleLogin = async () => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
+
+            // AÇÃO REQUERIDA: Notificação de Boas-vindas
+            await dispararNotificacaoLocal(t("welcome"), "Seja bem-vindo ao seu bloco de notas!");
+
             router.replace("/Home");
         } catch (error: any) {
             Alert.alert(t("login_error"), error.message);
@@ -29,7 +39,7 @@ export default function LoginScreen() {
         <View style={styles.container}>
             <Text style={styles.title}>{t("welcome")}</Text>
 
-            <TextInput style={styles.input} placeholder={t("email_placeholder")} value={email} onChangeText={setEmail} />
+            <TextInput style={styles.input} placeholder={t("email_placeholder")} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
             <TextInput style={styles.input} placeholder={t("password_placeholder")} secureTextEntry value={password} onChangeText={setPassword} />
 
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
@@ -40,7 +50,6 @@ export default function LoginScreen() {
                 <Text style={styles.linkText}>{t("go_to_register")}</Text>
             </TouchableOpacity>
 
-            {/* Botão de mudar idioma */}
             <TouchableOpacity style={styles.langButton} onPress={toggleLanguage}>
                 <Text style={styles.langButtonText}>{i18n.language === "pt" ? "Switch to English 🇺🇸" : "Mudar para Português 🇧🇷"}</Text>
             </TouchableOpacity>

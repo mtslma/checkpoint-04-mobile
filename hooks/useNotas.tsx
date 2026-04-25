@@ -6,6 +6,7 @@ import { collection, onSnapshot, orderBy, query, doc, deleteDoc, updateDoc } fro
 import * as Location from "expo-location";
 import { salvarNotaUsuario } from "../services/userDataService";
 import { useTranslation } from "react-i18next";
+import { dispararNotificacaoLocal } from "../services/notificationService";
 
 export type Nota = {
     id: string;
@@ -79,6 +80,7 @@ export function useNotas() {
 
     const handleSalvarNova = async () => {
         if (!titulo.trim() || !descricao.trim()) return Alert.alert(t("alert_warning"), t("alert_fill_fields"));
+
         try {
             let { status } = await Location.requestForegroundPermissionsAsync();
             let coords = null;
@@ -86,9 +88,14 @@ export function useNotas() {
                 let location = await Location.getCurrentPositionAsync({});
                 coords = { latitude: location.coords.latitude, longitude: location.coords.longitude };
             }
+
             const user = auth.currentUser;
             if (user) {
                 await salvarNotaUsuario(user.uid, titulo.trim(), descricao.trim(), coords);
+
+                // AÇÃO REQUERIDA: Notificação de confirmação (Tutorial pág. 7)
+                await dispararNotificacaoLocal("Nota Criada!", `Sua nota "${titulo}" foi salva com sucesso.`);
+
                 setTitulo("");
                 setDescricao("");
                 setModalAddVisivel(false);

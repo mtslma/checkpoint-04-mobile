@@ -3,32 +3,18 @@
     "name": "AulaAuth",
     "slug": "AulaAuth",
     "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "scheme": "AulaAuth",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
+      "package": "com.mateus.aulaauth",
+      "versionCode": 1,
+      "permissions": ["NOTIFICATIONS", "ACCESS_FINE_LOCATION", "FOREGROUND_SERVICE"]
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "cli": {
+      "appVersionSource": "remote"
     },
-    "plugins": [
-      "expo-router",
-      "expo-localization"
-    ]
+    "extra": {
+      "eas": {
+        "projectId": "ebd66ae9-cb4b-4159-8b5f-d2c187cd7148"
+      }
+    }
   }
 }
